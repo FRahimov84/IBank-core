@@ -16,3 +16,7 @@ func Init(db *sql.DB) error{
 	return nil
 }
 
+func sayHello() string  {
+	return "hello"
+}
+
