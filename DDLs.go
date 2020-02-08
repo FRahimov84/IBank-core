@@ -17,7 +17,7 @@ const billsDDL = `create table if not exists bills
     balance integer not null check ( balance > 0 ),
     locked  boolean not null
 );`
-const ATMsDDL = `create table if not exists ATMs
+const atmsDDL = `create table if not exists ATMs
 (
     id      integer primary key autoincrement,
     address text    not null,

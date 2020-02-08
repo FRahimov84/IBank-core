@@ -2,11 +2,12 @@ package IBank_core
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 func Init(db *sql.DB) error{
-	ddls := []string{usersDDL, billsDDL, ATMsDDL, servicesDDL}
+	ddls := []string{usersDDL, billsDDL, atmsDDL, servicesDDL}
 	for _,ddl := range ddls{
 		_, err := db.Exec(ddl)
 		if err != nil {
@@ -16,7 +17,9 @@ func Init(db *sql.DB) error{
 	return nil
 }
 
-func sayHello() string  {
-	return "hello"
+func Oll()  {
+	fmt.Println("Suck my ass!")
 }
+
+
 
