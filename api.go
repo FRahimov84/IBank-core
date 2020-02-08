@@ -2,7 +2,6 @@ package IBank_core
 
 import (
 	"database/sql"
-	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -15,10 +14,6 @@ func Init(db *sql.DB) error{
 		}
 	}
 	return nil
-}
-
-func Oll()  {
-	fmt.Println("Suck my ass!")
 }
 
 
