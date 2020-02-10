@@ -7,7 +7,7 @@ import (
 )
 
 func Init(db *sql.DB) error {
-	ddls := []string{usersDDL, billsDDL, atmsDDL, servicesDDL}
+	ddls := []string{foreignKeysON, usersDDL, billsDDL, atmsDDL, servicesDDL}
 	for _, ddl := range ddls {
 		_, err := db.Exec(ddl)
 		if err != nil {
@@ -61,3 +61,23 @@ VALUES (?, ?);`, address, locked)
 	return nil
 }
 
+func UsersList(db *sql.DB) ([]UserList, error) {
+	rows, err := db.Query(`select name, surname, phoneNumber, locked from users`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	usersList := make([]UserList, 0)
+	for rows.Next() {
+		userList := UserList{}
+		err := rows.Scan(&userList.Id, &userList.Name, &userList.Surname, &userList.Phone, &userList.Locked)
+		if err != nil {
+			return nil, err
+		}
+		usersList = append(usersList, userList)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return usersList, nil
+}
