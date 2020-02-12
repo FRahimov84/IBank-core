@@ -2,6 +2,13 @@ package IBank_core
 
 const foreignKeysON = `pragma foreign_keys = on;`
 
+const BankDDL = `create table if not exists bank
+(
+    id     integer primary key autoincrement,
+    name   text    not null unique,
+    balance integer not null check ( balance >= 0 )
+);`
+
 const usersDDL = `create table if not exists users
 (
     id          integer primary key autoincrement,
