@@ -19,7 +19,7 @@ func Init(db *sql.DB) error {
 
 func AddUser(db *sql.DB, login, pass, name, surname, phone string, locked bool) error {
 	_, err := db.Exec(`insert into users(login, pass, name, surname, phoneNumber, locked)
-VALUES (?, ?, ?, ?, ?, ?);`, login, GetMD5Hash(pass), name, surname, phone, locked)
+VALUES (?, ?, ?, ?, ?, ?);`, login, getMD5Hash(pass), name, surname, phone, locked)
 	if err != nil {
 		return fmt.Errorf("can't add a user in database %w", err)
 	}
@@ -114,7 +114,7 @@ func Login(db *sql.DB, login, pass string) (int, string, error) {
 	if err != nil {
 		return -1, "null", err
 	}
-	if user_pass != GetMD5Hash(pass) {
+	if user_pass != getMD5Hash(pass) {
 		return -1, "Unsigned", fmt.Errorf("invalid password")
 	}
 	return user_id, user_name, nil
