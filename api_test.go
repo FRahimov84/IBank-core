@@ -2,36 +2,12 @@ package IBank_core
 
 import (
 	"database/sql"
-	_ "fmt"
-	_ "fmt"
-	_ "fmt"
-	_ "fmt"
-	_ "fmt"
-	_ "fmt"
-	_ "fmt"
-	_ "fmt"
-	_ "fmt"
-	_ "fmt"
-	_ "fmt"
-	_ "fmt"
 	_ "github.com/mattn/go-sqlite3"
-	_ "github.com/mattn/go-sqlite3"
-	_ "github.com/mattn/go-sqlite3"
-	_ "github.com/mattn/go-sqlite3"
-	_ "github.com/mattn/go-sqlite3"
-	_ "github.com/mattn/go-sqlite3"
-	_ "github.com/mattn/go-sqlite3"
-	_ "github.com/mattn/go-sqlite3"
-	_ "github.com/mattn/go-sqlite3"
-	_ "github.com/mattn/go-sqlite3"
-	_ "github.com/mattn/go-sqlite3"
-	_ "github.com/mattn/go-sqlite3"
-	"reflect"
 	"testing"
 )
 
 
-func TestLoginClient_LoginNotOkForInvalidPassword(t *testing.T) {
+func TestLogin(t *testing.T) {
 	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
 		t.Errorf("can't open db: %v", err)
@@ -43,24 +19,23 @@ func TestLoginClient_LoginNotOkForInvalidPassword(t *testing.T) {
 	}()
 
 	// shift 2 раза -> sql dialect
-	_, err = db.Exec(`
-  CREATE TABLE clients (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-  login TEXT NOT NULL UNIQUE,
-  password TEXT NOT NULL)`)
+	_, err = db.Exec(usersDDL)
 	if err != nil {
-		t.Errorf("can't execute Login: %v", err)
+		t.Errorf("can't create table user err: %v", err)
 	}
 
-	_, err = db.Exec(`INSERT INTO clients(id, login, password) VALUES (1, 'don', 'don');`)
+	err = AddUser(db, "don", "don", "don", "don", "don", false)
 	if err != nil {
-		t.Errorf("can't execute Login: %v", err)
+		t.Errorf("can't add user don: %v", err)
 	}
 
 	_, _, err = Login(db, "don", "xer")
-
 	if err == nil {
-		t.Errorf("Not ErrInvalidPass error for invalid pass: %v", err)
+		t.Errorf("Not Invalid Password Login() got err: %v", err)
+	}
+	_, _, err = Login(db, "don", "don")
+	if err != nil {
+		t.Errorf("Not correct pass Login() got err: %v", err)
 	}
 }
 
@@ -153,23 +128,154 @@ func check(a,b UserList) bool {
 }
 
 func TestAddBillToUser(t *testing.T) {
+	db, err := sql.Open("sqlite3", ":memory:")
+	if err != nil {
+		t.Errorf("can't open db: %v", err)
+	}
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Errorf("can't close db: %v", err)
+		}
+	}()
+	_, err = db.Exec(usersDDL)
+	if err != nil {
+		t.Errorf("can't create table users err: %v", err)
+	}
+	_, err = db.Exec(billsDDL)
+	if err != nil {
+		t.Errorf("can't create table bills err: %v", err)
+	}
+	_, err = db.Exec(foreignKeysON)
+	if err != nil {
+		t.Errorf("can't on foreign keys: %v", err)
+	}
+	err = AddUser(db, "123", "123", "123", "123", "123", false)
+	if err != nil {
+		t.Errorf("can't insert user 123: %v", err)
+	}
+	err = AddUser(db, "1234", "1234", "1234", "1234", "1234", true)
+	if err != nil {
+		t.Errorf("can't insert user 1234: %v", err)
+	}
+	err = AddBillToUser(db, 1, 100, false)
+	if err != nil {
+		t.Errorf("can't add bill to user 123: %v", err)
+	}
+	err = AddBillToUser(db, 2, 100, false)
+	if err == nil {
+		t.Errorf("user 1234 was blocked but AddBillToUser() got err: %v", err)
+	}
 
 }
 
 func TestAddService(t *testing.T) {
+	db, err := sql.Open("sqlite3", ":memory:")
+	if err != nil {
+		t.Errorf("can't open db: %v", err)
+	}
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Errorf("can't close db: %v", err)
+		}
+	}()
+	_, err = db.Exec(servicesDDL)
+	if err != nil {
+		t.Errorf("can't create table services err: %v", err)
+	}
+	_, err = db.Exec(foreignKeysON)
+	if err != nil {
+		t.Errorf("can't on foreign keys: %v", err)
+	}
+	err = AddService(db, "tjk", 200)
+	if err != nil {
+		t.Errorf("can't add service got err: %v", err)
+	}
+	err = AddService(db, "tjk", 200)
+	if err == nil{
+		t.Errorf("duplicate service added is no correct got err: %v", err)
+	}
 
 }
 
 func TestAddATM(t *testing.T) {
-
-}
-
-func TestPayService(t *testing.T) {
-
+	db, err := sql.Open("sqlite3", ":memory:")
+	if err != nil {
+		t.Errorf("can't open db: %v", err)
+	}
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Errorf("can't close db: %v", err)
+		}
+	}()
+	_, err = db.Exec(atmsDDL)
+	if err != nil {
+		t.Errorf("can't create table atms err: %v", err)
+	}
+	_, err = db.Exec(foreignKeysON)
+	if err != nil {
+		t.Errorf("can't on foreign keys: %v", err)
+	}
+	err = AddATM(db, "tjk", false)
+	if err != nil {
+		t.Errorf("can't add service got err: %v", err)
+	}
+	err = AddATM(db, "tjk", false)
+	if err == nil{
+		t.Errorf("duplicate service added is no correct got err: %v", err)
+	}
 }
 
 func TestServicesList(t *testing.T) {
+	db, err := sql.Open("sqlite3", ":memory:")
+	if err != nil {
+		t.Errorf("can't open db: %v", err)
+	}
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Errorf("can't close db: %v", err)
+		}
+	}()
+	_, err = db.Exec(servicesDDL)
+	if err != nil {
+		t.Errorf("can't create table services err: %v", err)
+	}
+	_, err = db.Exec(usersDDL)
+	if err != nil {
+		t.Errorf("can't create table users err: %v", err)
+	}
+	_, err = db.Exec(billsDDL)
+	if err != nil {
+		t.Errorf("can't create table bills err: %v", err)
+	}
+	_, err = db.Exec(foreignKeysON)
+	if err != nil {
+		t.Errorf("can't on foreign keys: %v", err)
+	}
 
+	err = AddUser(db,"123","123","123","123","123",false)
+	if err != nil {
+		t.Errorf("can't add user 123: %v", err)
+	}
+	err = AddUser(db,"1234","1234","1234","1234","1234",true)
+	if err != nil {
+		t.Errorf("can't add user 1234: %v", err)
+	}
+	err = AddBillToUser(db, 1, 100, false)
+	if err != nil {
+		t.Errorf("can't add bill to user 123: %v", err)
+	}
+	err = AddBillToUser(db, 2, 100, true)
+	if err == nil {
+		t.Errorf("can't add bill to user 123: %v", err)
+	}
+	_, err, _ = CheckBill(db, 1)
+	if err != nil {
+		t.Errorf("wrong err: %v", err)
+	}
+	_, err, _ = CheckBill(db, 2)
+	if err == nil {
+		t.Errorf("wrong err: %v", err)
+	}
 }
 
 func TestCheckBill(t *testing.T) {
