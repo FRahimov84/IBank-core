@@ -109,13 +109,17 @@ func Login(db *sql.DB, login, pass string) (int, string, error) {
 	var user_id int
 	var user_name string
 	var user_pass string
+	var user_lock bool
 
-	err := db.QueryRow(`select id, name, pass from users where login = ?`, login).Scan(&user_id, &user_name, &user_pass)
+	err := db.QueryRow(`select id, name, pass, locked from users where login = ?`, login).Scan(&user_id, &user_name, &user_pass, &user_lock)
 	if err != nil {
 		return -1, "null", err
 	}
 	if user_pass != getMD5Hash(pass) {
 		return -1, "Unsigned", fmt.Errorf("invalid password")
+	}
+	if user_lock {
+		return -1, "Unsigned", fmt.Errorf("User was blocked")
 	}
 	return user_id, user_name, nil
 }
@@ -125,7 +129,12 @@ func UserBills(db *sql.DB, user_id int) ([]BillList, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			fmt.Printf("can't close rows in UserBills() err: %e\n",err)
+		}
+	}()
 	Bills := make([]BillList, 0)
 	for rows.Next() {
 		bill := BillList{}
@@ -251,6 +260,9 @@ func AvailableBills(db *sql.DB, user_id int, amount int) ([]BillList, error) {
 }
 
 func TransferBillToBill(db *sql.DB, sender_id, sender_balance, addressee_id, addressee_balance, amount int) error {
+	if sender_id == addressee_id{
+		return fmt.Errorf("Нельзя переводит самому себе!")
+	}
 	tx, err := db.Begin()
 	if err != nil {
 		return fmt.Errorf("can't open transaction %w", err)
@@ -293,3 +305,27 @@ func GetAnyBill(db *sql.DB, phone string, amount int) (int, int, error) {
 	}
 	return bills[0].Id, bills[0].Balance, nil
 }
+
+func BillsWithUserList(db *sql.DB) ([]BillUser, error) {
+	rows, err := db.Query(`select b.id, b.balance, b.locked, u.name, u.surname, u.phoneNumber, u.locked
+from bills b
+         left join users u on b.user_id = u.id;`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	billUsersList := make([]BillUser, 0)
+	for rows.Next() {
+		billuserList := BillUser{}
+		err := rows.Scan(&billuserList.Id, &billuserList.Balance, &billuserList.LockedBill, &billuserList.UserName, &billuserList.UserSurname, &billuserList.UserPhone, &billuserList.LockedUser)
+		if err != nil {
+			return nil, err
+		}
+		billUsersList = append(billUsersList, billuserList)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return billUsersList, nil
+}
+

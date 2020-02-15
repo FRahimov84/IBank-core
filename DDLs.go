@@ -16,7 +16,7 @@ const usersDDL = `create table if not exists users
     pass        text        not null,
     name        text        not null,
     surname     text        not null,
-    phoneNumber text unique not null,
+    phoneNumber text  not null UNIQUE,
     locked      boolean     not null
 );`
 const billsDDL = `create table if not exists bills
