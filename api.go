@@ -17,6 +17,54 @@ func Init(db *sql.DB) error {
 	return nil
 }
 
+func LockStatus(db *sql.DB, user_id int)(error, bool){
+	var lock bool
+	err := db.QueryRow(`select locked from users where id = ?`, user_id).Scan(&lock)
+	if err != nil {
+		return err, false
+	}
+	return nil, lock
+}
+func LockUser(db *sql.DB, lock bool, user_id int)  error {
+	_, err := db.Exec(`UPDATE users set locked = ? where id = ?;`, lock, user_id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func FinaByName(db *sql.DB, name string) (error, UserList){
+	user := UserList{
+		Id:      0,
+		Name:    name,
+		Surname: "",
+		Phone:   "",
+		Locked:  false,
+	}
+
+	err := db.QueryRow(`select id, surname, phoneNumber, locked from users where name = ?`, name).Scan(&user.Id, &user.Surname, &user.Phone, &user.Locked)
+	if err != nil {
+		return err, user
+	}
+	return nil, user
+}
+
+func FinaByPhone(db *sql.DB, phone string)  (error, UserList){
+	user := UserList{
+		Id:      0,
+		Name:    "",
+		Surname: "",
+		Phone:   phone,
+		Locked:  false,
+	}
+
+	err := db.QueryRow(`select id, surname, name, locked from users where phoneNumber  = ?`, phone).Scan(&user.Id, &user.Surname, &user.Name, &user.Locked)
+	if err != nil {
+		return err, user
+	}
+	return nil, user
+}
+
 func AddUser(db *sql.DB, login, pass, name, surname, phone string, locked bool) error {
 	_, err := db.Exec(`insert into users(login, pass, name, surname, phoneNumber, locked)
 VALUES (?, ?, ?, ?, ?, ?);`, login, getMD5Hash(pass), name, surname, phone, locked)

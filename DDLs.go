@@ -23,7 +23,7 @@ const billsDDL = `create table if not exists bills
 (
     id      integer primary key autoincrement,
     user_id integer references users,
-    balance integer not null check ( balance > 0 ),
+    balance integer not null check ( balance >= 0 ),
     locked  boolean not null
 );`
 const atmsDDL = `create table if not exists ATMs
@@ -36,5 +36,5 @@ const servicesDDL = `create table if not exists services
 (
     id     integer primary key autoincrement,
     name   text    not null unique,
-    price integer not null check ( price > 0 )
+    price integer not null check ( price >= 0 )
 );`
